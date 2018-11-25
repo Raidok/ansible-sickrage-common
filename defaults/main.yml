@@ -1,3 +1,4 @@
 ---
-sickbeard_install_dir: '/opt/sickbeard'
-sickbeard_github_repo: 'https://github.com/midgetspy/Sick-Beard.git'
+sickrage_user: 'sickrage'
+sickrage_install_dir: '/opt/sickrage'
+sickrage_github_repo: 'https://github.com/SiCKRAGE/SiCKRAGE.git'

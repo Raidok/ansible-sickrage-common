@@ -1,51 +1,79 @@
 ---
+
+- name: create user group
+  user:
+    name: "{{ sickrage_user }}"
+    system: true
+    state: present
+
+- name: create user
+  user:
+    name: "{{ sickrage_user }}"
+    group: "{{ sickrage_user }}"
+    system: true
+    state: present
+
 - name: ensure dependencies are installed for Debian systems
-  apt: pkg=python-cheetah state=present
+  apt:
+    pkg: "{{item}}"
+    state: "present"
   when: ansible_os_family == 'Debian'
-  tags: sickbeard
+  with_items:
+    - python-cheetah
+    - python-pip
+  tags: sickrage
 
 - name: ensure dependencies are installed for RedHat systems
-  yum: name=python-cheetah state=present
+  yum:
+    pkg: "{{item}}"
+    state: "present"
   when: ansible_os_family == 'RedHat'
-  tags: sickbeard
+  with_items:
+    - python-cheetah
+    - python-pip
+  tags: sickrage
 
 - name: ensure the install dir is available
-  file: path={{ sickbeard_install_dir }}
+  file: path={{ sickrage_install_dir }}
         state=directory
-        owner={{ user }} group={{ user }} mode=755
+        owner={{ sickrage_user }} group={{ sickrage_user }} mode=755
   become: yes
-  tags: sickbeard
+  tags: sickrage
 
 - name: ensure the git repository is checked-out
-  git: repo={{ sickbeard_github_repo }}
-       dest={{ sickbeard_install_dir }}
+  git: repo={{ sickrage_github_repo }}
+       dest={{ sickrage_install_dir }}
        accept_hostkey=yes
-  tags: sickbeard
+  tags: sickrage
+
+- name: install requirements
+  pip:
+    requirements: "{{ sickrage_install_dir }}/requirements.txt"
 
 - name: ensure start-up config file is present
-  template: src=sickbeard.j2
-            dest=/etc/default/sickbeard
-            owner={{ user }} mode=755
+  template: src=sickrage.j2
+            dest=/etc/default/sickrage
+            owner={{ sickrage_user }} mode=755
   become: yes
-  tags: sickbeard
+  tags: sickrage
 
 - name: ensure start-up script is configured for Debian systems
-  file: src='{{ sickbeard_install_dir }}/init.ubuntu'
-        dest=/etc/init.d/sickbeard
+  file: src='{{ sickrage_install_dir }}/runscripts/init.ubuntu'
+        dest=/etc/init.d/sickrage
         state=link
   become: yes
   when: ansible_os_family == 'Debian'
-  tags: sickbeard
+  tags: sickrage
 
 - name: ensure start-up script is configured for RedHat systems
-  file: src='{{ sickbeard_install_dir }}/init.fedora'
-        dest=/etc/init.d/sickbeard
+  file: src='{{ sickrage_install_dir }}/init.fedora'
+        dest=/etc/init.d/sickrage
         state=link
   become: yes
   when: ansible_os_family == 'RedHat'
-  tags: sickbeard
+  tags: sickrage
 
-- name: ensure the sickbeard service is enabled at boot
-  service: name=sickbeard enabled=true
+- name: ensure the sickrage service is enabled at boot
+  service: name=sickrage enabled=true state=started
   become: yes
-  tags: sickbeard
+  tags: sickrage
